@@ -18,7 +18,7 @@ namespace Fireblizzard
             PlayerJumpedEvent evt = player.Jumped;
             if (!player.ControlEnabled)
             {
-                return evt;
+                return evt.Copy(move: evt.Move.NewY(player.CurrentVelocity.y));
             }
             else if (evt.JumpState == JumpState.Grounded && Input.GetButtonDown("Jump"))
             {
@@ -27,42 +27,26 @@ namespace Fireblizzard
             else if (Input.GetButtonUp("Jump"))
             {
                 Schedule<PlayerStopJump>().player = player;
-                return evt.Copy(stopJump: true);
+                float factor = (evt.Move.y > 0) ? player.Model.jumpDeceleration : 1;
+                return evt.Copy(move: evt.Move.NewY(player.CurrentVelocity.y * factor));
             }
             else if (evt.JumpState == JumpState.PrepareToJump)
             {
-                return evt.Copy(jump: true, stopJump: false, jumpState: JumpState.Jumping);
+                return evt.Copy(move: evt.Move.NewY(player.JumpTakeOffSpeed * player.Model.jumpModifier), jumpState: JumpState.Jumping);
             }
             else if (evt.JumpState == JumpState.Jumping && !player.IsGrounded)
             {
                 Schedule<PlayerJumped>().player = player;
-                return evt.Copy(jump: false, jumpState: JumpState.InFlight);
+                return evt.Copy(jumpState: JumpState.InFlight);
             }
             else if (evt.JumpState == JumpState.InFlight && player.IsGrounded)
             {
                 Schedule<PlayerLanded>().player = player;
-                return evt.Copy(jump: false, jumpState: JumpState.Landed);
+                return evt.Copy(jumpState: JumpState.Landed);
             }
             else if (evt.JumpState == JumpState.Landed)
             {
-                return evt.Copy(jump: false, jumpState: JumpState.Grounded);
-            }
-            else
-            {
-                return evt;
-            }
-        }
-        public static PlayerJumpedEvent ComputeVerticalVelocity(IPlayer player)
-        {
-            PlayerJumpedEvent evt = player.Jumped;
-            if (evt.Jump && player.IsGrounded)
-            {
-                return evt.Copy(jump: false, move: evt.Move.NewY(player.JumpTakeOffSpeed * player.Model.jumpModifier));
-            }
-            else if (evt.StopJump)
-            {
-                float factor = (evt.Move.y > 0) ? player.Model.jumpDeceleration : 1;
-                return evt.Copy(jump: false, move: evt.Move.NewY(player.CurrentVelocity.y * factor));
+                return evt.Copy(jumpState: JumpState.Grounded);
             }
             else
             {
@@ -77,14 +61,10 @@ namespace Fireblizzard
         }
         public static PlayerJumpedEvent Copy(
             this PlayerJumpedEvent value,
-            bool? jump = null,
-            bool? stopJump = null,
             JumpState? jumpState = null,
             Vector2? move = null)
         {
             return new PlayerJumpedEvent(
-                jump: jump ?? value.Jump,
-                stopJump: stopJump ?? value.StopJump,
                 jumpState: jumpState ?? value.JumpState,
                 move: move ?? value.Move);
         }
@@ -100,28 +80,19 @@ namespace Fireblizzard
 
     public struct PlayerJumpedEvent
     {
-        readonly bool jump;
-        readonly bool stopJump;
         readonly JumpState jumpState;
         readonly Vector2 move;
 
-        public bool Jump => jump;
-        public bool StopJump => stopJump;
         public JumpState JumpState => jumpState;
         public Vector2 Move => move;
 
         public PlayerJumpedEvent(
-            bool jump = false,
-            bool stopJump = false,
             JumpState jumpState = JumpState.Grounded,
             Vector2 move = new Vector2())
         {
-            this.jump = jump;
-            this.stopJump = stopJump;
             this.jumpState = jumpState;
             this.move = move;
         }
-        
     }
 
     public interface IPlayer
@@ -149,7 +120,6 @@ namespace Platformer.Mechanics
         public PlayerJumpedEvent Jumped { get; set; } = new PlayerJumpedEvent();
         public void ComputeJump()
         {
-            Jumped = Utils.ComputeVerticalVelocity(this);
             Jumped = Utils.ComputeHorizontalVelocity(this);
             velocity = Jumped.Move;
         }
