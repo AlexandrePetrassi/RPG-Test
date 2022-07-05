@@ -52,15 +52,6 @@ namespace Fireblizzard
                 return evt;
             }
         }
-
-        public static PlayerJumpedEvent UpdateMoveState(IPlayer player)
-        {
-            PlayerJumpedEvent evt = player.Jumped;
-            return player.ControlEnabled
-                ? player.Jumped.Copy(move: evt.Move.NewX(Input.GetAxis("Horizontal")))
-                : player.Jumped;
-        }
-
         public static PlayerJumpedEvent ComputeVerticalVelocity(IPlayer player)
         {
             PlayerJumpedEvent evt = player.Jumped;
@@ -77,6 +68,12 @@ namespace Fireblizzard
             {
                 return evt.Copy(move: evt.Move.NewY(player.CurrentVelocity.y));
             }
+        }
+        public static PlayerJumpedEvent ComputeHorizontalVelocity(IPlayer player)
+        {
+            PlayerJumpedEvent evt = player.Jumped;
+            float newSpeed = player.ControlEnabled ? Input.GetAxis("Horizontal") : 0;
+            return evt.Copy(move: evt.Move.NewX(newSpeed));
         }
         public static PlayerJumpedEvent Copy(
             this PlayerJumpedEvent value,
@@ -149,19 +146,18 @@ namespace Platformer.Mechanics
         public float JumpTakeOffSpeed => jumpTakeOffSpeed;
         public PlatformerModel Model => model;
         public Vector2 CurrentVelocity => velocity;
-        public PlayerJumpedEvent Jumped{ get; set; } = new PlayerJumpedEvent();
+        public PlayerJumpedEvent Jumped { get; set; } = new PlayerJumpedEvent();
         public void ComputeJump()
         {
-            Jumped = Jumped.Copy(move: move);
             Jumped = Utils.ComputeVerticalVelocity(this);
-            move = Jumped.Move;
-            velocity.y = move.y;
+            Jumped = Utils.ComputeHorizontalVelocity(this);
+            velocity = Jumped.Move;
         }
         public void UpdateSpriteRenderer()
         {
-            if (move.x > 0.01f)
+            if (Jumped.Move.x > 0.01f)
                 SpriteRenderer.flipX = false;
-            else if (move.x < -0.01f)
+            else if (Jumped.Move.x < -0.01f)
                 SpriteRenderer.flipX = true;
         }
         public void UpdateAnimator()

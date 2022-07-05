@@ -30,8 +30,6 @@ namespace Platformer.Mechanics
         public float jumpTakeOffSpeed = 7;
         
         public bool controlEnabled = true;
-
-        Vector2 move;
         
         readonly PlatformerModel model = Simulation.GetModel<PlatformerModel>();
 
@@ -44,13 +42,12 @@ namespace Platformer.Mechanics
 
         protected override void Update()
         {
-            move.x = controlEnabled ? Input.GetAxis("Horizontal") : 0;
             Jumped = Utils.UpdateJumpState(this);
             base.Update();
             ComputeJump();
             UpdateSpriteRenderer();
             UpdateAnimator();
-            SetKinematicVelocity(move);
+            SetKinematicVelocity(Jumped.Move);
         }
 
         protected override void ComputeVelocity() { }
