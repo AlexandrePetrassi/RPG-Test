@@ -54,18 +54,13 @@ namespace Platformer.Mechanics
             move.x = controlEnabled ? Input.GetAxis("Horizontal") : 0;
             Jumped = Utils.UpdateJumpState(this);
             base.Update();
-        }
-
-        protected override void ComputeVelocity()
-        {
             ComputeJump();
-
             UpdateSpriteRenderer();
-
             UpdateAnimator();
-
             SetKinematicVelocity(move);
         }
+
+        protected override void ComputeVelocity() { }
 
         public enum JumpState
         {
