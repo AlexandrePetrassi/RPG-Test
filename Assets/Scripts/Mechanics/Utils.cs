@@ -18,7 +18,7 @@ namespace Fireblizzard
             PlayerJumpedEvent evt = player.Jumped;
             if (!player.ControlEnabled)
             {
-                return evt.Copy(move: evt.Move.NewY(player.CurrentVelocity.y));
+                return evt.Copy(move: evt.Move.Copy(y: player.CurrentVelocity.y));
             }
             else if (evt.JumpState == JumpState.Grounded && Input.GetButtonDown("Jump"))
             {
@@ -28,11 +28,11 @@ namespace Fireblizzard
             {
                 Schedule<PlayerStopJump>().player = player;
                 float factor = (evt.Move.y > 0) ? player.Model.jumpDeceleration : 1;
-                return evt.Copy(move: evt.Move.NewY(player.CurrentVelocity.y * factor));
+                return evt.Copy(move: evt.Move.Copy(y: player.CurrentVelocity.y * factor));
             }
             else if (evt.JumpState == JumpState.PrepareToJump)
             {
-                return evt.Copy(move: evt.Move.NewY(player.JumpTakeOffSpeed * player.Model.jumpModifier), jumpState: JumpState.Jumping);
+                return evt.Copy(move: evt.Move.Copy(y: player.JumpTakeOffSpeed * player.Model.jumpModifier), jumpState: JumpState.Jumping);
             }
             else if (evt.JumpState == JumpState.Jumping && !player.IsGrounded)
             {
@@ -50,14 +50,14 @@ namespace Fireblizzard
             }
             else
             {
-                return evt.Copy(move: evt.Move.NewY(player.CurrentVelocity.y));
+                return evt.Copy(move: evt.Move.Copy(y: player.CurrentVelocity.y));
             }
         }
         public static PlayerJumpedEvent ComputeHorizontalVelocity(IPlayer player)
         {
             PlayerJumpedEvent evt = player.Jumped;
             float newSpeed = player.ControlEnabled ? Input.GetAxis("Horizontal") : 0;
-            return evt.Copy(move: evt.Move.NewX(newSpeed));
+            return evt.Copy(move: evt.Move.Copy(x : newSpeed));
         }
         public static PlayerJumpedEvent Copy(
             this PlayerJumpedEvent value,
@@ -68,13 +68,12 @@ namespace Fireblizzard
                 jumpState: jumpState ?? value.JumpState,
                 move: move ?? value.Move);
         }
-        public static Vector2 NewX(this Vector2 vector, float x)
+        public static Vector2 Copy(
+            this Vector2 value,
+            float? x = null,
+            float? y = null)
         {
-            return new Vector2(x, vector.y);
-        }
-        public static Vector2 NewY(this Vector2 vector, float y)
-        {
-            return new Vector2(vector.x, y);
+            return new Vector2(x ?? value.x, y ?? value.y);
         }
     }
 
