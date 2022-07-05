@@ -6,6 +6,7 @@ using static Platformer.Core.Simulation;
 using Platformer.Model;
 using Platformer.Core;
 using Fireblizzard;
+using System;
 
 namespace Platformer.Mechanics
 {
@@ -27,27 +28,19 @@ namespace Platformer.Mechanics
         /// Initial jump velocity at the start of a jump.
         /// </summary>
         public float jumpTakeOffSpeed = 7;
-
-        /*internal new*/ public Collider2D collider2d;
-        /*internal new*/ public AudioSource audioSource;
-        public Health health;
+        
         public bool controlEnabled = true;
 
         Vector2 move;
-        SpriteRenderer spriteRenderer;
-        internal Animator animator;
+        
         readonly PlatformerModel model = Simulation.GetModel<PlatformerModel>();
 
-        public Bounds Bounds => collider2d.bounds;
-
-        void Awake()
-        {
-            health = GetComponent<Health>();
-            audioSource = GetComponent<AudioSource>();
-            collider2d = GetComponent<Collider2D>();
-            spriteRenderer = GetComponent<SpriteRenderer>();
-            animator = GetComponent<Animator>();
-        }
+        public Health Health => health != null ? health : (health = GetComponent<Health>()); private Health health;
+        public AudioSource AudioSource => audioSource != null ? audioSource : (audioSource = GetComponent<AudioSource>()); private AudioSource audioSource;
+        public SpriteRenderer SpriteRenderer => spriteRenderer != null ? spriteRenderer : (spriteRenderer = GetComponent<SpriteRenderer>()); private SpriteRenderer spriteRenderer;
+        public Animator Animator => animator != null ? animator : (animator = GetComponent<Animator>()); private Animator animator;
+        public Collider2D Collider2D => collider2d != null ? collider2d : (collider2d = GetComponent<Collider2D>()); private Collider2D collider2d;
+        public Bounds Bounds => Collider2D.bounds;
 
         protected override void Update()
         {

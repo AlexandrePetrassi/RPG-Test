@@ -144,7 +144,6 @@ namespace Platformer.Mechanics
 {
     public partial class PlayerController : IPlayer
     {
-        public AudioSource AudioSource => audioSource;
         public AudioClip JumpAudio => jumpAudio;
         public bool ControlEnabled => controlEnabled;
         public float JumpTakeOffSpeed => jumpTakeOffSpeed;
@@ -161,14 +160,14 @@ namespace Platformer.Mechanics
         public void UpdateSpriteRenderer()
         {
             if (move.x > 0.01f)
-                spriteRenderer.flipX = false;
+                SpriteRenderer.flipX = false;
             else if (move.x < -0.01f)
-                spriteRenderer.flipX = true;
+                SpriteRenderer.flipX = true;
         }
         public void UpdateAnimator()
         {
-            animator.SetBool("grounded", IsGrounded);
-            animator.SetFloat("velocityX", Mathf.Abs(velocity.x) / maxSpeed);
+            Animator.SetBool("grounded", IsGrounded);
+            Animator.SetFloat("velocityX", Mathf.Abs(velocity.x) / maxSpeed);
         }
         public void SetKinematicVelocity(Vector2 newVelocity)
         {
