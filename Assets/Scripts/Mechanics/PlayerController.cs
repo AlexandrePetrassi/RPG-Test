@@ -42,9 +42,9 @@ namespace Platformer.Mechanics
 
         protected override void Update()
         {
-            Jumped = Utils.UpdateJumpState(this);
+            Jumped = Utils.UpdateState(this);
             base.Update();
-            ComputeJump();
+            velocity = Jumped.Move;
             UpdateSpriteRenderer();
             UpdateAnimator();
             SetKinematicVelocity(Jumped.Move);

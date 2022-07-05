@@ -13,51 +13,45 @@ namespace Fireblizzard
 {
     public static class Utils
     {
-        public static PlayerJumpedEvent UpdateJumpState(IPlayer player)
+        public static PlayerJumpedEvent UpdateState(IPlayer player)
         {
             PlayerJumpedEvent evt = player.Jumped;
             if (!player.ControlEnabled)
             {
-                return evt.Copy(move: evt.Move.Copy(y: player.CurrentVelocity.y));
+                return evt.Copy(move: evt.Move.Copy(x: 0, y: player.CurrentVelocity.y));
             }
-            else if (evt.JumpState == JumpState.Grounded && Input.GetButtonDown("Jump"))
+            if (evt.JumpState == JumpState.Grounded && Input.GetButtonDown("Jump"))
             {
-                return evt.Copy(jumpState: JumpState.PrepareToJump);
+                return evt.Copy(jumpState: JumpState.PrepareToJump, move: evt.Move.Copy(x: Input.GetAxis("Horizontal")));
             }
-            else if (Input.GetButtonUp("Jump"))
+            if (Input.GetButtonUp("Jump"))
             {
                 Schedule<PlayerStopJump>().player = player;
                 float factor = (evt.Move.y > 0) ? player.Model.jumpDeceleration : 1;
-                return evt.Copy(move: evt.Move.Copy(y: player.CurrentVelocity.y * factor));
+                return evt.Copy(move: evt.Move.Copy(x: Input.GetAxis("Horizontal"), y: player.CurrentVelocity.y * factor));
             }
-            else if (evt.JumpState == JumpState.PrepareToJump)
+            if (evt.JumpState == JumpState.PrepareToJump)
             {
-                return evt.Copy(move: evt.Move.Copy(y: player.JumpTakeOffSpeed * player.Model.jumpModifier), jumpState: JumpState.Jumping);
+                return evt.Copy(move: evt.Move.Copy(x: Input.GetAxis("Horizontal"), y: player.JumpTakeOffSpeed * player.Model.jumpModifier), jumpState: JumpState.Jumping);
             }
-            else if (evt.JumpState == JumpState.Jumping && !player.IsGrounded)
+            if (evt.JumpState == JumpState.Jumping && !player.IsGrounded)
             {
                 Schedule<PlayerJumped>().player = player;
-                return evt.Copy(jumpState: JumpState.InFlight);
+                return evt.Copy(jumpState: JumpState.InFlight, move: evt.Move.Copy(x: Input.GetAxis("Horizontal")));
             }
-            else if (evt.JumpState == JumpState.InFlight && player.IsGrounded)
+            if (evt.JumpState == JumpState.InFlight && player.IsGrounded)
             {
                 Schedule<PlayerLanded>().player = player;
-                return evt.Copy(jumpState: JumpState.Landed);
+                return evt.Copy(jumpState: JumpState.Landed, move: evt.Move.Copy(x: Input.GetAxis("Horizontal")));
             }
-            else if (evt.JumpState == JumpState.Landed)
+            if (evt.JumpState == JumpState.Landed)
             {
-                return evt.Copy(jumpState: JumpState.Grounded);
+                return evt.Copy(jumpState: JumpState.Grounded, move: evt.Move.Copy(x: Input.GetAxis("Horizontal")));
             }
             else
             {
-                return evt.Copy(move: evt.Move.Copy(y: player.CurrentVelocity.y));
+                return evt.Copy(move: evt.Move.Copy(x: Input.GetAxis("Horizontal"), y: player.CurrentVelocity.y));
             }
-        }
-        public static PlayerJumpedEvent ComputeHorizontalVelocity(IPlayer player)
-        {
-            PlayerJumpedEvent evt = player.Jumped;
-            float newSpeed = player.ControlEnabled ? Input.GetAxis("Horizontal") : 0;
-            return evt.Copy(move: evt.Move.Copy(x : newSpeed));
         }
         public static PlayerJumpedEvent Copy(
             this PlayerJumpedEvent value,
@@ -117,11 +111,6 @@ namespace Platformer.Mechanics
         public PlatformerModel Model => model;
         public Vector2 CurrentVelocity => velocity;
         public PlayerJumpedEvent Jumped { get; set; } = new PlayerJumpedEvent();
-        public void ComputeJump()
-        {
-            Jumped = Utils.ComputeHorizontalVelocity(this);
-            velocity = Jumped.Move;
-        }
         public void UpdateSpriteRenderer()
         {
             if (Jumped.Move.x > 0.01f)
